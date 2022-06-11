@@ -40,11 +40,23 @@ ORDER BY    P.Country;
 
 
 -- QUESTION 6
-SELECT      DISTINCT P.FName, P.LName
-FROM        INDIVIDUAL_RESULTS IR
-LEFT JOIN   ATHLETE A ON IR.Olympian = A.OlympicID
-LEFT JOIN   PARTICIPANT P ON IR.Olympian = P.OlympicID
-ORDER BY    P.FName, P.LName;
+SELECT      DISTINCT P.LName, P.FName
+FROM        PARTICIPANT P, ATHLETE A, TEAM T, INDIVIDUAL_RESULTS IR, TEAM_RESULTS TR
+WHERE       (
+                P.OlympicID = A.OlympicID AND IR.Olympian = P.OlympicID
+            )
+            OR
+            (
+                TR.Team = T.TeamID AND
+                (
+                    T.Member1 = P.OlympicID OR
+                    T.Member2 = P.OlympicID OR
+                    T.Member3 = P.OlympicID OR
+                    T.Member4 = P.OlympicID OR
+                    T.Member5 = P.OlympicID OR
+                    T.Member6 = P.OlympicID
+                )
+            );
 
 
 -- QUESTION 7
@@ -97,38 +109,16 @@ LEFT JOIN   ATHLETE A ON AMID.MemberID = A.OlympicID
 LEFT JOIN   PARTICIPANT P ON P.OlympicID = AMID.MemberID
 ORDER BY    A.BirthYear DESC;
 
+SELECT * FROM TEAM_ATHLETES;
+
 
 -- QUESTION 12
-CREATE TABLE INDIVID_W AS
-SELECT DISTINCT * FROM
-(
-    (SELECT      ES.EventDate, ES.Location "EventVenue", P.LName "LastName", P.Country
-    FROM        EVENT_SCHEDULE ES
-    INNER JOIN  INDIVIDUAL_RESULTS IR ON IR.EventID = ES.EventID
-    LEFT JOIN   PARTICIPANT P ON P.OlympicID = IR.Olympian)
-UNION ALL
-    (SELECT      ES.EventDate, ES.Location "EventVenue", P.LName "LastName", P.Country
-    FROM        EVENT_SCHEDULE ES
-    INNER JOIN  TEAM_RESULTS TR ON TR.EventID = ES.EventID
-    LEFT JOIN   (
-                    SELECT *
-                    FROM    (
-                                SELECT T.Member1 "MemberID", T.TeamID FROM TEAM T UNION ALL
-                                SELECT T.Member2 "MemberID", T.TeamID FROM TEAM T UNION ALL
-                                SELECT T.Member3 "MemberID", T.TeamID FROM TEAM T UNION ALL
-                                SELECT T.Member4 "MemberID", T.TeamID FROM TEAM T UNION ALL
-                                SELECT T.Member5 "MemberID", T.TeamID FROM TEAM T UNION ALL
-                                SELECT T.Member6 "MemberID", T.TeamID FROM TEAM T
-                            ) AS AM
-                    WHERE   AM.MemberID IS NOT NULL
-                ) AMI ON AMI.TeamID = TR.Team
-    LEFT JOIN   PARTICIPANT P ON P.OlympicID = AMI.MemberID)
-) AK
-WHERE       AK.EventDate = 'July 30'
-ORDER BY    AK.LastName;
+CREATE TABLE    INDIVID_W AS
+SELECT          ES.EventDate, ES.Location "EventVenue", P.LName "LastName", P.Country
+FROM            PARTICIPANT P, ATHLETE A, EVENT_SCHEDULE AS ES
+WHERE           P.OlympicID = A.OlympicID AND A.Sex = 'F' AND EventVenue = 'July 30';
 
-
-SELECT * from INDIVID_W;
+SELECT * FROM INDIVID_W;
 
 
 -- QUESTION 13
